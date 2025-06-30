@@ -1,0 +1,30 @@
+.map-container {
+  margin-top: 30px;
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.map-container h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+}
+
+.kakao-map {
+  width: 100%;
+  height: 500px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+  .map-container {
+    padding: 20px;
+  }
+  
+  .kakao-map {
+    height: 400px;
+  }
+}
