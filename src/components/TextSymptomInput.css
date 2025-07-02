@@ -1,0 +1,29 @@
+.text-symptom-container {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.text-symptom-textarea {
+  width: 80%;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  resize: none;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.text-symptom-submit {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 0.7rem 1.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.text-symptom-submit:hover {
+  background: #43a047;
+}
+
