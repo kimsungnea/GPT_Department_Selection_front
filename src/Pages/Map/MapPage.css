@@ -1,0 +1,98 @@
+.map-page-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.map-top-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+.map-top-overlay.closed .summary-content {
+  display: none;
+}
+.summary-toggle {
+  width: 100%;
+  background: #2196f3;   /* 파랑 계열 */
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+}
+.summary-content {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.bottom-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #ddd;
+  transform: translateY(85%);
+  transition: transform 0.3s ease;
+  z-index: 15;
+}
+.bottom-sheet.open {
+  transform: translateY(0);
+}
+.bottom-sheet-toggle {
+  width: 100%;
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  cursor: pointer;
+}
+.hospital-list {
+  max-height: 40vh;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+.hospital-item {
+  border-bottom: 1px solid #eee;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+.hospital-item:hover {
+  background: #f2f2f2;
+}
+.navigate-btn {
+  margin-top: 0.3rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.navigate-btn:hover {
+  background: #218838;
+}
+.hospital-empty {
+  text-align: center;
+  padding: 1rem;
+  color: #888;
+}
+.bottom-sheet-toggle-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #2196f3;   /* 파랑 계열 */
+  color: white;
+  padding: 0.7rem;
+  border: none;
+  border-top: 1px solid #ccc;
+  cursor: pointer;
+  z-index: 999;
+}
