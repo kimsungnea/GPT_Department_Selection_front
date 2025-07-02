@@ -82,35 +82,38 @@ const MainPage = () => {
         <p className="subtitle">AI 기반 증상 분석 + 위치 기반 병원 추천</p>
       </header>
 
-      <section className="guide">
-        <p className="guide-title">🩺 증상을 말하거나 입력해주세요</p>
-        <p className="guide-example">예: “머리가 아파요”, “열이 나고 기침이 있어요”</p>
-      </section>
+      <section className="green-border">
+        <section className="guide">
+          <p className="guide-title">🩺 증상을 말하거나 입력해주세요</p>
+          <p className="guide-example">예: “머리가 아파요”, “열이 나고 기침이 있어요”</p>
+        </section>
 
-      <section className="button-group">
-        <VoiceRecorder ref={voiceRef} onTranscript={analyzeSymptom} />
-        <TextSymptomInput ref={textRef} onSubmit={analyzeSymptom} />
-      </section>
+        <section className="button-group">
+          <VoiceRecorder ref={voiceRef} onTranscript={analyzeSymptom} />
+          <TextSymptomInput ref={textRef} onSubmit={analyzeSymptom} />
+        </section>
 
-      {loading && (
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>AI가 증상을 분석 중입니다...</p>
-        </div>
-      )}
+        {loading && (
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <p>AI가 증상을 분석 중입니다...</p>
+          </div>
+        )}
 
-      {error && (
-        <div className="error-banner">
-          ⚠️ {error}
-        </div>
-      )}
+        {error && (
+          <div className="error-banner">
+            ⚠️ {error}
+          </div>
+        )}
 
-      <section className="tip-box">
-        <h3>💡 음성 인식 팁</h3>
-        <ul>
-          <li>조용한 환경에서 말해주세요</li>
-          <li>명확하고 구체적으로 말해주세요</li>
-        </ul>
+        <section className="inner-border">
+          <h3>💡 팁</h3>
+          <ul>
+            <li>조용한 환경에서 말해주세요</li>
+            <li>명확하고 구체적으로 증상을 설명해주세요</li>
+            <li>자세히 입력할수록 분석 정확도가 올라갑니다.</li>
+          </ul>
+        </section>
       </section>
 
       <footer className="footer">
