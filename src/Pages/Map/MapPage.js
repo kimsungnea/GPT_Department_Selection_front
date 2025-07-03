@@ -10,36 +10,33 @@ const MapPage = () => {
     symptom,
     department,
     reason,
-    recommendedHospitals,
+    recommendedHospitals = [],
     userLocation
   } = location.state || {};
 
   const mapRef = useRef(null);
   const polylineRef = useRef(null);
   const userMarkerRef = useRef(null);
-  const watchIdRef = useRef(null);
 
-  const [isSheetOpen, setIsSheetOpen] = useState(true);
+  // F5 시 기본 열림
   const [isSummaryOpen, setIsSummaryOpen] = useState(true);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [eta, setEta] = useState(null);
-  const [isTracking, setIsTracking] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!symptom || !department || !userLocation) return;
-
     if (!window.kakao || !window.kakao.maps) return;
 
     const kakao = window.kakao;
     const center = new kakao.maps.LatLng(userLocation.lat, userLocation.lng);
     const container = document.getElementById('map');
 
-    const options = { center, level: 5 }; // 초기 레벨
+    const options = { center, level: 3 };
     const map = new kakao.maps.Map(container, options);
     mapRef.current = map;
 
-    // 내 위치 마커
     const imageSrc = "/images/mark.PNG";
     const imageSize = new kakao.maps.Size(40, 40);
     const imageOption = { offset: new kakao.maps.Point(20, 40) };
@@ -52,8 +49,7 @@ const MapPage = () => {
       image: userMarkerImage
     });
 
-    // 병원 마커
-    recommendedHospitals?.forEach(h => {
+    recommendedHospitals.forEach(h => {
       if (!h.x || !h.y) return;
       const pos = new kakao.maps.LatLng(Number(h.y), Number(h.x));
       const marker = new kakao.maps.Marker({
@@ -67,22 +63,16 @@ const MapPage = () => {
       info.open(map, marker);
     });
 
-    // bounds 한 번만
     const bounds = new kakao.maps.LatLngBounds();
     bounds.extend(center);
-    recommendedHospitals?.forEach(h => {
+    recommendedHospitals.forEach(h => {
       if (!h.y || !h.x) return;
       bounds.extend(new kakao.maps.LatLng(Number(h.y), Number(h.x)));
     });
     map.setBounds(bounds);
-    map.setLevel(5); // 초기 레벨 고정
 
-    return () => {
-      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
-    };
   }, [recommendedHospitals, userLocation, symptom, department]);
 
-  // 길찾기
   const handleRoute = async (hospital) => {
     setSelectedHospital(hospital);
 
@@ -137,37 +127,6 @@ const MapPage = () => {
     }
   };
 
-  // 실시간 추적
-  const toggleTracking = () => {
-    if (isTracking) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-      setIsTracking(false);
-    } else {
-      if (!navigator.geolocation) {
-        alert("위치추적 불가");
-        return;
-      }
-      setIsTracking(true);
-      watchIdRef.current = navigator.geolocation.watchPosition((pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        if (!mapRef.current) return;
-        const kakao = window.kakao;
-        const newPos = new kakao.maps.LatLng(lat, lng);
-
-        if (userMarkerRef.current) {
-          userMarkerRef.current.setPosition(newPos);
-        }
-      });
-    }
-  };
-
-  const handleToggleSheet = () => {
-    setIsSheetOpen(prev => !prev);
-  };
-
   if (!symptom || !department) {
     return (
       <div style={{ textAlign: 'center', padding: '1rem' }}>
@@ -191,79 +150,73 @@ const MapPage = () => {
 
   return (
     <div className="map-page-container">
-      {/* 지도 */}
       <div id="map" style={{ width: "100%", height: "100dvh" }}></div>
 
-      {/* 상단 요약 */}
-      <div className={`map-top-overlay ${isSummaryOpen ? 'open' : 'closed'}`}>
-        <button
-          className="summary-toggle"
+      {/* 요약 패널 */}
+      <div className={`map-top-overlay ${isSummaryOpen ? '' : 'closed'}`}>
+        {/* 토글 버튼 패널 위에 겹치게 */}
+        <img
+          src={isSummaryOpen ? "/images/left.png" : "/images/right.png"}
+          className="summary-toggle-icon"
           onClick={() => setIsSummaryOpen(prev => !prev)}
-        >
-          {isSummaryOpen ? '▲ 요약 닫기' : '▼ 요약 열기'}
-        </button>
-        {isSummaryOpen && (
-          <div className="summary-content">
-            <div><span>📝</span> <strong>{symptom}</strong></div>
-            <div><span>🏥</span> {department}</div>
-            {reason && <div><span>🧠</span> {reason}</div>}
-            {selectedHospital && eta && (
-              <div style={{marginTop: "8px"}}>
-                🚗 <strong>{selectedHospital.name}</strong>까지  
-                {eta.distance}km / 약 {eta.duration}분
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 병원리스트 */}
-      <div className={`bottom-sheet ${isSheetOpen ? 'open' : ''}`}>
-        {isSheetOpen && (
-          <div className="hospital-list">
-            {recommendedHospitals.length === 0 ? (
-              <div className="hospital-empty">추천된 병원이 없습니다.</div>
-            ) : (
-              recommendedHospitals.map((h, idx) => (
-                <div key={idx} className="hospital-item">
-                  <strong>{h.placeName || '이름 없음'}</strong>
-                  <div>{h.addressName || '주소 없음'}</div>
-                  <div>📞 {h.phone || '번호 없음'}</div>
-                  <div>📍 {h.distance ? `${h.distance}m` : '거리정보 없음'}</div>
-                  <button
-                    className="navigate-btn"
-                    onClick={() => handleRoute({
-                      ...h,
-                      lat: Number(h.y),
-                      lng: Number(h.x)
-                    })}
-                  >
-                    길찾기 안내
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 토글버튼 고정 */}
-      <button
-        className="bottom-sheet-toggle-fixed"
-        onClick={handleToggleSheet}
-      >
-        {isSheetOpen ? '▼ 주변 병원 닫기' : '▲ 주변 병원 보기'}
-      </button>
-
-      {/* 경로 컨트롤 */}
-      {selectedHospital && (
-        <div className="route-controls">
-          <button onClick={toggleTracking}>
-            {isTracking ? "📍 추적 중지" : "📍 실시간 추적"}
-          </button>
-          {error && <div style={{color:"red"}}>{error}</div>}
+          alt="toggle summary"
+        />
+        <div className="summary-content">
+          <div><span>📝</span> <strong>{symptom}</strong></div>
+          <div><span>🏥</span> {department}</div>
+          {reason && <div><span>🧠</span> {reason}</div>}
         </div>
-      )}
+      </div>
+
+      {/* bottom sheet */}
+      <div className={`bottom-sheet ${isSheetOpen ? 'open' : ''}`}>
+        <img
+          src={isSheetOpen ? "/images/down.png" : "/images/up.png"}
+          className="bottom-sheet-toggle-btn"
+          onClick={() => setIsSheetOpen(prev => !prev)}
+          alt="toggle hospital list"
+        />
+        <div className="hospital-list">
+          {recommendedHospitals.length === 0 ? (
+            <div className="hospital-empty">
+              추천된 병원이 없습니다.<br/>
+              다른 증상으로 검색해보세요!
+            </div>
+          ) : (
+            recommendedHospitals.map((h, idx) => {
+              const isSelected =
+                selectedHospital && selectedHospital.placeName === h.placeName;
+              return (
+                <div key={idx} className="hospital-item-card">
+                  <div className="hospital-card-header">
+                    <strong>{h.placeName || '이름 없음'}</strong>
+                    <span>{h.distance ? `${h.distance}m` : '거리정보 없음'}</span>
+                  </div>
+                  <div className="hospital-card-body">
+                    <div>{h.addressName || '주소 정보 없음'}</div>
+                    <div>📞 {h.phone || '전화번호 준비 중'}</div>
+                    <button
+                      className="navigate-btn"
+                      onClick={() => handleRoute({
+                        ...h,
+                        lat: Number(h.y),
+                        lng: Number(h.x)
+                      })}
+                    >
+                      🚗 길찾기
+                    </button>
+                    {isSelected && eta && (
+                      <div style={{ marginTop: "6px", color: "#007bff" }}>
+                        🚗 {eta.distance}km / 약 {eta.duration}분
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
     </div>
   );
 };
