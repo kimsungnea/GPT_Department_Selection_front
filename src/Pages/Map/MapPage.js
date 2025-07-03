@@ -171,7 +171,7 @@ const MapPage = () => {
       {/* bottom sheet */}
       <div className={`bottom-sheet ${isSheetOpen ? 'open' : ''}`}>
         <img
-          src={isSheetOpen ? "/images/down.png" : "/images/up.png"}
+          src={isSheetOpen ? "/images/up.png" : "/images/down.png"}
           className="bottom-sheet-toggle-btn"
           onClick={() => setIsSheetOpen(prev => !prev)}
           alt="toggle hospital list"
