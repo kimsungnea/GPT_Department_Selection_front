@@ -82,6 +82,10 @@ const MainPage = () => {
         <p className="subtitle">AI 기반 증상 분석 + 위치 기반 병원 추천</p>
       </header>
 
+        <div className="ad-banner">
+    <img src="/images/corona.png" alt="코로나 광고" />
+  </div>
+
       <section className="green-border">
         <section className="guide">
           <p className="guide-title">🩺 증상을 말하거나 입력해주세요</p>
