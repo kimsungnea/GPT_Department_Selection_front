@@ -107,3 +107,11 @@
   padding: 8px;
   border-radius: 8px;
 }
+
+.ad-banner img {
+  width: 100%;
+  max-width: 500px;   /* 최대 400px 정도로 제한 */
+  max-height: 50px;
+  height: auto;
+  border-radius: 8px;
+}

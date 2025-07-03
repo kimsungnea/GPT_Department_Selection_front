@@ -151,12 +151,16 @@ const MapPage = () => {
   return (
     <div className="map-page-container">
       {/* 상단 좌측 ← 버튼 */}
-      <div
-        className="back-to-home"
-        onClick={() => navigate('/')}
-      >
-        ←
-      </div>
+    <div
+      className="back-to-home"
+      onClick={() => navigate('/')}
+    >
+      <img
+        src="/images/back.png"
+        alt="back"
+        style={{ width: "20px", height: "20px" }}
+      />
+</div>
 
       <div id="map" style={{ width: "100%", height: "100dvh" }}></div>
 
