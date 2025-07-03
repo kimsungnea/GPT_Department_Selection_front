@@ -20,7 +20,7 @@ const MapPage = () => {
 
   // F5 시 기본 열림
   const [isSummaryOpen, setIsSummaryOpen] = useState(true);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(true);
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [eta, setEta] = useState(null);
   const [error, setError] = useState("");
@@ -150,13 +150,20 @@ const MapPage = () => {
 
   return (
     <div className="map-page-container">
+      {/* 상단 좌측 ← 버튼 */}
+      <div
+        className="back-to-home"
+        onClick={() => navigate('/')}
+      >
+        ←
+      </div>
+
       <div id="map" style={{ width: "100%", height: "100dvh" }}></div>
 
       {/* 요약 패널 */}
       <div className={`map-top-overlay ${isSummaryOpen ? '' : 'closed'}`}>
-        {/* 토글 버튼 패널 위에 겹치게 */}
         <img
-          src={isSummaryOpen ? "/images/left.png" : "/images/right.png"}
+          src={isSummaryOpen ? "/images/right.png" : "/images/left.png"}
           className="summary-toggle-icon"
           onClick={() => setIsSummaryOpen(prev => !prev)}
           alt="toggle summary"
@@ -171,7 +178,7 @@ const MapPage = () => {
       {/* bottom sheet */}
       <div className={`bottom-sheet ${isSheetOpen ? 'open' : ''}`}>
         <img
-          src={isSheetOpen ? "/images/up.png" : "/images/down.png"}
+          src={isSheetOpen ? "/images/down.png" : "/images/up.png"}
           className="bottom-sheet-toggle-btn"
           onClick={() => setIsSheetOpen(prev => !prev)}
           alt="toggle hospital list"
