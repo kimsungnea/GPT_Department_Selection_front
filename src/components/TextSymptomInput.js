@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 
-const TextSymptomInput = ({ onSubmit, onActivate, activeInput }) => {
+const TextSymptomInput = ({ onSubmit, onActivate }) => {
   const [showInput, setShowInput] = useState(false);
   const [text, setText] = useState('');
 
   const handleButtonClick = () => {
-    if (showInput) {
-      setShowInput(false);
-      if (onActivate) onActivate(null);
-    } else {
-      setShowInput(true);
-      if (onActivate) onActivate("text");
+    const nextShowInput = !showInput;
+    setShowInput(nextShowInput);
+
+    if (nextShowInput && onActivate) {
+      onActivate("text");
+    }
+    if (!nextShowInput && onActivate) {
+      onActivate(null);
     }
   };
 
@@ -25,15 +27,9 @@ const TextSymptomInput = ({ onSubmit, onActivate, activeInput }) => {
     if (onActivate) onActivate(null);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
-
   return (
-    <div className="text-symptom-input">
+    <div style={{ textAlign: "center", width: "100%" }}>
+      {/* 이미지 버튼 */}
       <button
         onClick={handleButtonClick}
         style={{
@@ -50,35 +46,45 @@ const TextSymptomInput = ({ onSubmit, onActivate, activeInput }) => {
         />
       </button>
 
+      {/* 입력창 */}
       {showInput && (
-        <div style={{ marginTop: "1rem" }}>
-          <textarea
+        <div
+          style={{
+            marginTop: "1rem",
+            position: "relative",
+            width: "100%",
+            maxWidth: "600px",
+            marginInline: "auto",
+          }}
+        >
+          <input
+            type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
             placeholder="증상을 자세하게 입력할수록 정확도가 증가합니다."
-            rows={3}
             style={{
               width: "100%",
-              padding: "1rem",
-              borderRadius: "12px",
+              padding: "0.7rem 4rem 0.7rem 1rem", // 오른쪽에 버튼 공간 확보
+              borderRadius: "20px",
               border: "1px solid #ccc",
-              resize: "none",
-              fontSize: "1rem"
+              fontSize: "1rem",
+              boxSizing: "border-box"
             }}
           />
-          <br />
           <button
             onClick={handleSubmit}
             style={{
+              position: "absolute",
+              top: "50%",
+              right: "10px",
+              transform: "translateY(-50%)",
               background: "#4caf50",
               color: "white",
               border: "none",
               borderRadius: "20px",
-              padding: "0.7rem 1.5rem",
+              padding: "0.4rem 1rem",
               cursor: "pointer",
-              fontSize: "0.9rem",
-              marginTop: "0.5rem"
+              fontSize: "0.9rem"
             }}
           >
             제출

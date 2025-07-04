@@ -51,7 +51,6 @@ const VoiceRecorder = ({ onTranscript, onActivate, activeInput }) => {
     };
   }, [onTranscript, onActivate]);
 
-  // activeInput이 voice일때 mount → 바로 start
   useEffect(() => {
     if (activeInput === "voice" && recognitionRef.current && !isRecording) {
       recognitionRef.current.start();
@@ -65,17 +64,20 @@ const VoiceRecorder = ({ onTranscript, onActivate, activeInput }) => {
     }
 
     if (isRecording) {
-      setIsRecording(false); // 즉시 상태를 false로
+      setIsRecording(false);
       recognitionRef.current?.stop();
-      if (onActivate) onActivate(null); // 즉시 화면 초기화
+      if (onActivate) onActivate(null);
     } else {
-      if (onActivate) onActivate("voice"); // 클릭과 동시에
-      // start는 위 useEffect
+      if (onActivate) onActivate("voice");
     }
   };
 
   return (
-    <div className="voice-recorder-container">
+    <div
+      className={
+        `voice-recorder-container ${!isRecording ? "voice-margin-right" : ""}`
+      }
+    >
       <button
         onClick={handleClick}
         className="image-record-button"
