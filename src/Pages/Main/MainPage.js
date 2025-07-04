@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import VoiceRecorder from '../../components/VoiceRecorder';
 import TextSymptomInput from '../../components/TextSymptomInput';
 import axios from 'axios';
@@ -10,10 +10,9 @@ const API_BASE_URL = 'http://localhost:8080/api';
 const MainPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [activeInput, setActiveInput] = useState(null); // null, 'voice', 'text'
 
-  const voiceRef = useRef();
-  const textRef = useRef();
+  const navigate = useNavigate();
 
   const analyzeSymptom = async (symptomText) => {
     try {
@@ -69,6 +68,7 @@ const MainPage = () => {
       setError('증상 분석 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setLoading(false);
+      setActiveInput(null); // 분석 끝나면 초기상태로 복귀
     }
   };
 
@@ -80,11 +80,10 @@ const MainPage = () => {
           <span className="logo-title">스마트 병원 찾기</span>
         </div>
         <p className="subtitle">AI 기반 증상 분석 + 위치 기반 병원 추천</p>
-      </header>
-
         <div className="ad-banner">
-    <img src="/images/corona.png" alt="코로나 광고" />
-  </div>
+          <img src="/images/test1.jpg" alt="프로젝트 광고" />
+        </div>
+      </header>
 
       <section className="green-border">
         <section className="guide">
@@ -93,8 +92,20 @@ const MainPage = () => {
         </section>
 
         <section className="button-group">
-          <VoiceRecorder ref={voiceRef} onTranscript={analyzeSymptom} />
-          <TextSymptomInput ref={textRef} onSubmit={analyzeSymptom} />
+          { (activeInput === null || activeInput === "voice") && (
+            <VoiceRecorder
+              activeInput={activeInput}
+              onActivate={(value) => setActiveInput(value ?? null)}
+              onTranscript={analyzeSymptom}
+            />
+          )}
+          { (activeInput === null || activeInput === "text") && (
+            <TextSymptomInput
+              activeInput={activeInput}
+              onActivate={(value) => setActiveInput(value ?? null)}
+              onSubmit={analyzeSymptom}
+            />
+          )}
         </section>
 
         {loading && (
