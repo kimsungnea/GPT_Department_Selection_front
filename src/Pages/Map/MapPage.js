@@ -18,7 +18,6 @@ const MapPage = () => {
   const polylineRef = useRef(null);
   const userMarkerRef = useRef(null);
 
-  // F5 시 기본 열림
   const [isSummaryOpen, setIsSummaryOpen] = useState(true);
   const [isSheetOpen, setIsSheetOpen] = useState(true);
   const [selectedHospital, setSelectedHospital] = useState(null);
@@ -61,6 +60,15 @@ const MapPage = () => {
         content: `<div style="padding:6px;font-size:12px;">🏥 ${h.placeName}</div>`
       });
       info.open(map, marker);
+
+      // 마커 클릭 시 길찾기 자동 실행
+      kakao.maps.event.addListener(marker, "click", () => {
+        handleRoute({
+          ...h,
+          lat: Number(h.y),
+          lng: Number(h.x)
+        });
+      });
     });
 
     const bounds = new kakao.maps.LatLngBounds();
@@ -150,24 +158,20 @@ const MapPage = () => {
 
   return (
     <div className="map-page-container">
-      {/* 상단 좌측 ← 버튼 */}
-    <div
-      className="back-to-home"
-      onClick={() => navigate('/')}
-    >
-      <img
-        src="/images/back.png"
-        alt="back"
-        style={{ width: "20px", height: "20px" }}
-      />
-</div>
+      {/* 좌측 최상단 홈버튼 */}
+      <div
+        className="back-to-home"
+        onClick={() => navigate('/')}
+      >
+        <img src="/images/back.png" alt="back" style={{ width: "20px", height: "20px" }} />
+      </div>
 
       <div id="map" style={{ width: "100%", height: "100dvh" }}></div>
 
       {/* 요약 패널 */}
       <div className={`map-top-overlay ${isSummaryOpen ? '' : 'closed'}`}>
         <img
-          src={isSummaryOpen ? "/images/right.png" : "/images/left.png"}
+          src={isSummaryOpen ? "/images/left.png" : "/images/right.png"}
           className="summary-toggle-icon"
           onClick={() => setIsSummaryOpen(prev => !prev)}
           alt="toggle summary"
@@ -182,7 +186,7 @@ const MapPage = () => {
       {/* bottom sheet */}
       <div className={`bottom-sheet ${isSheetOpen ? 'open' : ''}`}>
         <img
-          src={isSheetOpen ? "/images/down.png" : "/images/up.png"}
+          src={isSheetOpen ? "/images/up.png" : "/images/down.png"}
           className="bottom-sheet-toggle-btn"
           onClick={() => setIsSheetOpen(prev => !prev)}
           alt="toggle hospital list"

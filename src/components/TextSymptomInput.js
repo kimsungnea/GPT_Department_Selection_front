@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 
-const TextSymptomInput = ({ onSubmit }) => {
+const TextSymptomInput = ({ onSubmit, onActivate, activeInput }) => {
   const [showInput, setShowInput] = useState(false);
   const [text, setText] = useState('');
 
   const handleButtonClick = () => {
-    setShowInput(!showInput);
+    if (showInput) {
+      setShowInput(false);
+      if (onActivate) onActivate(null);
+    } else {
+      setShowInput(true);
+      if (onActivate) onActivate("text");
+    }
   };
 
   const handleSubmit = () => {
@@ -15,7 +21,8 @@ const TextSymptomInput = ({ onSubmit }) => {
     }
     onSubmit(text);
     setText('');
-    setShowInput(false);  // 입력 후 닫을지 유지할지는 취향에 맞게
+    setShowInput(false);
+    if (onActivate) onActivate(null);
   };
 
   const handleKeyDown = (e) => {
@@ -26,8 +33,7 @@ const TextSymptomInput = ({ onSubmit }) => {
   };
 
   return (
-    <div style={{ textAlign: "center" }}>
-      {/* 이미지 버튼 */}
+    <div className="text-symptom-input">
       <button
         onClick={handleButtonClick}
         style={{
@@ -44,7 +50,6 @@ const TextSymptomInput = ({ onSubmit }) => {
         />
       </button>
 
-      {/* 토글된 입력창 */}
       {showInput && (
         <div style={{ marginTop: "1rem" }}>
           <textarea
