@@ -61,6 +61,11 @@ const TextSymptomInput = ({ onSubmit, onActivate }) => {
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSubmit();
+              }
+            }}
             placeholder="증상을 자세하게 입력할수록 정확도가 증가합니다."
             style={{
               width: "100%",

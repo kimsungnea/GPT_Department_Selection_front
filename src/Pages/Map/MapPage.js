@@ -171,7 +171,7 @@ const MapPage = () => {
       {/* 요약 패널 */}
       <div className={`map-top-overlay ${isSummaryOpen ? '' : 'closed'}`}>
         <img
-          src={isSummaryOpen ? "/images/left.png" : "/images/right.png"}
+          src={isSummaryOpen ? "/images/stic2.png" : "/images/stic2.png"}
           className="summary-toggle-icon"
           onClick={() => setIsSummaryOpen(prev => !prev)}
           alt="toggle summary"
@@ -186,7 +186,7 @@ const MapPage = () => {
       {/* bottom sheet */}
       <div className={`bottom-sheet ${isSheetOpen ? 'open' : ''}`}>
         <img
-          src={isSheetOpen ? "/images/up.png" : "/images/down.png"}
+          src={isSheetOpen ? "/images/stic.png" : "/images/stic.png"}
           className="bottom-sheet-toggle-btn"
           onClick={() => setIsSheetOpen(prev => !prev)}
           alt="toggle hospital list"
