@@ -11,17 +11,17 @@ const HospitalList = ({ hospitals }) => {
             <div className="hospital-number">{index + 1}</div>
             <div className="hospital-info">
               <h3>{hospital.placeName}</h3>
-              <p className="address">📍 {hospital.addressName}</p>
-              <p className="phone">📞 {hospital.phone || '전화번호 없음'}</p>
-              <p className="distance">📏 {hospital.distance}m</p>
+              <p>📍 {hospital.addressName}</p>
+              <p>📞 {hospital.phone || 'ℹ️ 전화번호 준비 중'}</p>
+              <p>📏 {hospital.distance ? `${hospital.distance}m` : 'ℹ️ 거리정보 준비 중'}</p>
               {hospital.placeUrl && (
-                <a 
-                  href={hospital.placeUrl} 
-                  target="_blank" 
+                <a
+                  href={hospital.placeUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="detail-link"
                 >
-                  상세정보 보기
+                  상세 정보 보기
                 </a>
               )}
             </div>
