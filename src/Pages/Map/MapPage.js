@@ -62,13 +62,12 @@ const MapPage = () => {
       });
       info.open(map, marker);
 
-      // 마커 클릭 시 길찾기 자동 실행 + 카드 앞으로 이동
       kakao.maps.event.addListener(marker, "click", () => {
         handleRoute({
           ...h,
           lat: Number(h.y),
           lng: Number(h.x)
-        }, true);  // isFromMarker = true
+        }, true); // isFromMarker = true
       });
     });
 
@@ -82,13 +81,12 @@ const MapPage = () => {
 
   }, [hospitalList, userLocation, symptom, department]);
 
-  // isFromMarker 구분 추가
   const handleRoute = async (hospital, isFromMarker = false) => {
     setSelectedHospital(hospital);
 
     if (isFromMarker) {
       setHospitalList(prev => {
-        const filtered = prev.filter(h => h.placeName !== hospital.placeName);
+        const filtered = prev.filter(hh => hh.placeName !== hospital.placeName);
         return [hospital, ...filtered];
       });
     }
@@ -144,6 +142,52 @@ const MapPage = () => {
     }
   };
 
+  // 평일/주말 묶기
+  const formatOpeningHours = (openingHours) => {
+    if (!openingHours) return ["영업시간 정보 없음"];
+
+    const lines = openingHours.split(" / ");
+    let weekdayTimes = [];
+    let weekendTimes = [];
+    let sundayTime = null;
+
+    lines.forEach(line => {
+      const [day, time] = line.split(": ");
+      switch (day) {
+        case "Monday":
+        case "Tuesday":
+        case "Wednesday":
+        case "Thursday":
+        case "Friday":
+          weekdayTimes.push(time);
+          break;
+        case "Saturday":
+          weekendTimes.push(`토요일: ${time}`);
+          break;
+        case "Sunday":
+          sundayTime = time;
+          break;
+        default:
+          break;
+      }
+    });
+
+    const uniqueWeekday = [...new Set(weekdayTimes)];
+    let weekdayStr;
+    if (uniqueWeekday.length === 1) {
+      weekdayStr = `평일: ${uniqueWeekday[0]}`;
+    } else {
+      weekdayStr = `평일: 요일별 영업시간 다름`;
+    }
+
+    const result = [weekdayStr];
+    result.push(...weekendTimes);
+    if (sundayTime) {
+      result.push(`일요일: ${sundayTime}`);
+    }
+    return result;
+  };
+
   if (!symptom || !department) {
     return (
       <div style={{ textAlign: 'center', padding: '1rem' }}>
@@ -180,7 +224,7 @@ const MapPage = () => {
       {/* 요약 패널 */}
       <div className={`map-top-overlay ${isSummaryOpen ? '' : 'closed'}`}>
         <img
-          src={isSummaryOpen ? "/images/stic2.png" : "/images/stic2.png"}
+          src="/images/stic2.png"
           className="summary-toggle-icon"
           onClick={() => setIsSummaryOpen(prev => !prev)}
           alt="toggle summary"
@@ -195,7 +239,7 @@ const MapPage = () => {
       {/* bottom sheet */}
       <div className={`bottom-sheet ${isSheetOpen ? 'open' : ''}`}>
         <img
-          src={isSheetOpen ? "/images/stic.png" : "/images/stic.png"}
+          src="/images/stic.png"
           className="bottom-sheet-toggle-btn"
           onClick={() => setIsSheetOpen(prev => !prev)}
           alt="toggle hospital list"
@@ -208,24 +252,35 @@ const MapPage = () => {
             </div>
           ) : (
             hospitalList.map((h, idx) => {
-              const isSelected =
-                selectedHospital && selectedHospital.placeName === h.placeName;
+              const isSelected = selectedHospital && selectedHospital.placeName === h.placeName;
               return (
-                <div key={idx} className={`hospital-item-card ${isSelected ? 'selected' : ''}`}>
+                <div
+                  key={idx}
+                  className={`hospital-item-card ${isSelected ? "selected" : ""}`}
+                >
                   <div className="hospital-card-header">
-                    <strong>{h.placeName || '이름 없음'}</strong>
-                    <span>{h.distance ? `${h.distance}m` : '거리정보 없음'}</span>
+                    <strong>{h.placeName || "이름 없음"}</strong>
+                    <span>{h.distance ? `${h.distance}m` : "거리정보 없음"}</span>
                   </div>
                   <div className="hospital-card-body">
-                    <div>{h.addressName || '주소 정보 없음'}</div>
-                    <div>📞 {h.phone || '전화번호 준비 중'}</div>
+                    <div>{h.addressName || "주소 정보 없음"}</div>
+                    <div>📞 {h.phone || "전화번호 준비 중"}</div>
+                    <div>
+                      <ul style={{ margin: 0, paddingLeft: "1rem" }}>
+                        {formatOpeningHours(h.openingHours).map((line, idx2) => (
+                          <li key={idx2}>{line}</li>
+                        ))}
+                      </ul>
+                    </div>
                     <button
                       className="navigate-btn"
-                      onClick={() => handleRoute({
-                        ...h,
-                        lat: Number(h.y),
-                        lng: Number(h.x)
-                      })}
+                      onClick={() =>
+                        handleRoute({
+                          ...h,
+                          lat: Number(h.y),
+                          lng: Number(h.x),
+                        })
+                      }
                     >
                       🚗 길찾기
                     </button>
