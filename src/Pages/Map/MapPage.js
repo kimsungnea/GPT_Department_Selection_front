@@ -23,6 +23,7 @@ const MapPage = () => {
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [eta, setEta] = useState(null);
   const [error, setError] = useState("");
+  const [hospitalList, setHospitalList] = useState(recommendedHospitals);
 
   useEffect(() => {
     if (!symptom || !department || !userLocation) return;
@@ -48,7 +49,7 @@ const MapPage = () => {
       image: userMarkerImage
     });
 
-    recommendedHospitals.forEach(h => {
+    hospitalList.forEach(h => {
       if (!h.x || !h.y) return;
       const pos = new kakao.maps.LatLng(Number(h.y), Number(h.x));
       const marker = new kakao.maps.Marker({
@@ -61,28 +62,36 @@ const MapPage = () => {
       });
       info.open(map, marker);
 
-      // 마커 클릭 시 길찾기 자동 실행
+      // 마커 클릭 시 길찾기 자동 실행 + 카드 앞으로 이동
       kakao.maps.event.addListener(marker, "click", () => {
         handleRoute({
           ...h,
           lat: Number(h.y),
           lng: Number(h.x)
-        });
+        }, true);  // isFromMarker = true
       });
     });
 
     const bounds = new kakao.maps.LatLngBounds();
     bounds.extend(center);
-    recommendedHospitals.forEach(h => {
+    hospitalList.forEach(h => {
       if (!h.y || !h.x) return;
       bounds.extend(new kakao.maps.LatLng(Number(h.y), Number(h.x)));
     });
     map.setBounds(bounds);
 
-  }, [recommendedHospitals, userLocation, symptom, department]);
+  }, [hospitalList, userLocation, symptom, department]);
 
-  const handleRoute = async (hospital) => {
+  // isFromMarker 구분 추가
+  const handleRoute = async (hospital, isFromMarker = false) => {
     setSelectedHospital(hospital);
+
+    if (isFromMarker) {
+      setHospitalList(prev => {
+        const filtered = prev.filter(h => h.placeName !== hospital.placeName);
+        return [hospital, ...filtered];
+      });
+    }
 
     if (!window.kakao || !mapRef.current) return;
     const kakao = window.kakao;
@@ -123,8 +132,8 @@ const MapPage = () => {
         });
 
         setEta({
-          distance: (section.distance/1000).toFixed(1),
-          duration: Math.ceil(section.duration/60),
+          distance: (section.distance / 1000).toFixed(1),
+          duration: Math.ceil(section.duration / 60),
         });
 
         setError("");
@@ -192,17 +201,17 @@ const MapPage = () => {
           alt="toggle hospital list"
         />
         <div className="hospital-list">
-          {recommendedHospitals.length === 0 ? (
+          {hospitalList.length === 0 ? (
             <div className="hospital-empty">
-              추천된 병원이 없습니다.<br/>
+              추천된 병원이 없습니다.<br />
               다른 증상으로 검색해보세요!
             </div>
           ) : (
-            recommendedHospitals.map((h, idx) => {
+            hospitalList.map((h, idx) => {
               const isSelected =
                 selectedHospital && selectedHospital.placeName === h.placeName;
               return (
-                <div key={idx} className="hospital-item-card">
+                <div key={idx} className={`hospital-item-card ${isSelected ? 'selected' : ''}`}>
                   <div className="hospital-card-header">
                     <strong>{h.placeName || '이름 없음'}</strong>
                     <span>{h.distance ? `${h.distance}m` : '거리정보 없음'}</span>
