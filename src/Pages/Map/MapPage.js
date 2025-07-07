@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import CarRoute from '../../components/CarRoute';
+import TransitRoute from '../../components/TransitRoute';
 import './MapPage.css';
 
 const MapPage = () => {
@@ -15,8 +17,8 @@ const MapPage = () => {
   } = location.state || {};
 
   const mapRef = useRef(null);
-  const polylineRef = useRef(null);
-  const transitPolylineRef = useRef(null);
+  const carRouteRef = useRef(null);
+  const transitRouteRef = useRef(null);
   const userMarkerRef = useRef(null);
 
   const [isSummaryOpen, setIsSummaryOpen] = useState(true);
@@ -28,163 +30,6 @@ const MapPage = () => {
   const [isLoadingTransit, setIsLoadingTransit] = useState(false);
   const [error, setError] = useState("");
   const [hospitalList, setHospitalList] = useState(recommendedHospitals);
-
-  // Google Polyline 디코딩 함수
-  const decodePolyline = (encoded) => {
-    const coordinates = [];
-    let index = 0;
-    let lat = 0;
-    let lng = 0;
-
-    while (index < encoded.length) {
-      let b;
-      let shift = 0;
-      let result = 0;
-
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-
-      const deltaLat = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
-      lat += deltaLat;
-
-      shift = 0;
-      result = 0;
-
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-
-      const deltaLng = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
-      lng += deltaLng;
-
-      coordinates.push({
-        lat: lat / 1e5,
-        lng: lng / 1e5
-      });
-    }
-
-    return coordinates;
-  };
-
-  // Google 대중교통 경로 검색 함수 (에러 처리 강화)
-  const getTransitRoute = async (hospital) => {
-    // Google Routes API 키가 없으면 스킵
-    if (!process.env.REACT_APP_GOOGLE_ROUTES_API_KEY) {
-      console.log('Google Routes API 키가 설정되지 않았습니다.');
-      return { success: false, error: 'API 키 없음' };
-    }
-
-    try {
-      setIsLoadingTransit(true);
-      
-      const response = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': process.env.REACT_APP_GOOGLE_ROUTES_API_KEY,
-          'X-Goog-FieldMask': 'routes.legs.steps.transitDetails,routes.legs.steps.polyline,routes.legs.duration,routes.legs.distanceMeters'
-        },
-        body: JSON.stringify({
-          origin: {
-            location: {
-              latLng: {
-                latitude: parseFloat(userLocation.lat),
-                longitude: parseFloat(userLocation.lng)
-              }
-            }
-          },
-          destination: {
-            location: {
-              latLng: {
-                latitude: parseFloat(hospital.lat),
-                longitude: parseFloat(hospital.lng)
-              }
-            }
-          },
-          travelMode: "TRANSIT",
-          transitPreferences: {
-            routingPreference: "LESS_WALKING",
-            allowedTravelModes: ["BUS", "SUBWAY", "TRAIN", "LIGHT_RAIL"]
-          },
-          departureTime: new Date().toISOString(),
-          languageCode: "ko",
-          units: "METRIC"
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
-        const leg = route.legs[0];
-
-        // 경로 좌표 추출
-        const pathCoordinates = [];
-        const transitSteps = [];
-
-        leg.steps.forEach(step => {
-          if (step.polyline && step.polyline.encodedPolyline) {
-            const decoded = decodePolyline(step.polyline.encodedPolyline);
-            pathCoordinates.push(...decoded);
-          }
-
-          if (step.transitDetails) {
-            const transit = step.transitDetails;
-            transitSteps.push({
-              mode: transit.transitLine?.vehicle?.type || 'TRANSIT',
-              lineName: transit.transitLine?.name || '',
-              lineShort: transit.transitLine?.nameShort || '',
-              lineColor: transit.transitLine?.color || '#4CAF50',
-              departureStop: transit.stopDetails?.departureStop?.name || '',
-              arrivalStop: transit.stopDetails?.arrivalStop?.name || '',
-              stopCount: transit.stopCount || 0
-            });
-          }
-        });
-
-        // 카카오맵 좌표로 변환
-        const kakaoPath = pathCoordinates.map(coord => 
-          new window.kakao.maps.LatLng(coord.lat, coord.lng)
-        );
-
-        const summary = transitSteps.map(step => {
-          const mode = step.mode === 'SUBWAY' ? '지하철' : 
-                       step.mode === 'BUS' ? '버스' : 
-                       step.mode === 'TRAIN' ? '기차' : '대중교통';
-          return `${mode} ${step.lineShort || step.lineName}`;
-        }).join(' → ');
-
-        return {
-          success: true,
-          path: kakaoPath,
-          distance: (leg.distanceMeters / 1000).toFixed(1),
-          duration: Math.ceil(leg.duration.replace('s', '') / 60),
-          transferCount: Math.max(0, transitSteps.length - 1),
-          summary: summary || '대중교통',
-          steps: transitSteps
-        };
-      }
-
-      return { success: false, error: '경로를 찾을 수 없습니다.' };
-    } catch (error) {
-      console.error('대중교통 경로 검색 실패:', error);
-      return { 
-        success: false, 
-        error: error.message.includes('400') ? 'API 요청 오류 - API 키를 확인해주세요' : '네트워크 오류'
-      };
-    } finally {
-      setIsLoadingTransit(false);
-    }
-  };
 
   useEffect(() => {
     if (!symptom || !department || !userLocation) return;
@@ -245,7 +90,10 @@ const MapPage = () => {
   const handleRoute = async (hospital, isFromMarker = false) => {
     setSelectedHospital(hospital);
     setError("");
+    setEta(null);
     setTransitInfo(null);
+    setIsLoadingTransit(true);
+    setActiveRoute('car'); // 기본값을 자동차로 설정
 
     if (isFromMarker) {
       setHospitalList(prev => {
@@ -254,101 +102,85 @@ const MapPage = () => {
       });
     }
 
-    if (!window.kakao || !mapRef.current) return;
-    const kakao = window.kakao;
+    if (!mapRef.current) return;
 
     try {
-      // 자동차 경로 검색 (기존 코드)
-      const response = await fetch(
-        `https://apis-navi.kakaomobility.com/v1/directions?origin=${userLocation.lng},${userLocation.lat}&destination=${hospital.lng},${hospital.lat}`,
-        {
-          headers: {
-            Authorization: `KakaoAK ${process.env.REACT_APP_KAKAO_REST_API_KEY}`
-          }
-        }
+      // 먼저 기존 경로들 모두 제거
+      carRouteRef.current?.clearRoute();
+      transitRouteRef.current?.clearRoute();
+
+      // 자동차 경로 검색 및 그리기
+      const carResult = await carRouteRef.current.searchAndDrawRoute(
+        mapRef.current, 
+        userLocation, 
+        hospital
       );
-      const data = await response.json();
 
-      if (data.routes && data.routes[0]) {
-        const section = data.routes[0].sections[0];
-        const roads = section.roads;
-
-        const linePath = [];
-        roads.forEach(road => {
-          for (let i = 0; i < road.vertexes.length; i += 2) {
-            const lng = road.vertexes[i];
-            const lat = road.vertexes[i + 1];
-            linePath.push(new kakao.maps.LatLng(lat, lng));
-          }
-        });
-
-        if (polylineRef.current) polylineRef.current.setMap(null);
-
-        polylineRef.current = new kakao.maps.Polyline({
-          map: mapRef.current,
-          path: linePath,
-          strokeWeight: 6,
-          strokeColor: '#007bff',
-          strokeOpacity: 0.8,
-          strokeStyle: 'solid',
-        });
-
+      if (carResult.success) {
         setEta({
-          distance: (section.distance / 1000).toFixed(1),
-          duration: Math.ceil(section.duration / 60),
+          distance: carResult.distance,
+          duration: carResult.duration
         });
-
-        // 대중교통 경로도 함께 검색 (백그라운드)
-        getTransitRoute(hospital).then(transitResult => {
-          if (transitResult.success) {
-            setTransitInfo(transitResult);
-          } else {
-            console.log('대중교통 경로 검색 실패:', transitResult.error);
-          }
-        });
-
-        setError("");
+        console.log('자동차 경로 성공:', carResult);
+      } else {
+        console.error('자동차 경로 실패:', carResult.error);
       }
+
+      // 대중교통 경로 검색 (백그라운드)
+      setTimeout(async () => {
+        const transitResult = await transitRouteRef.current.searchAndDrawRoute(
+          mapRef.current, 
+          userLocation, 
+          hospital
+        );
+
+        if (transitResult.success) {
+          setTransitInfo(transitResult);
+          console.log('대중교통 경로 성공:', transitResult);
+          // 대중교통 경로는 처음에는 숨김
+          transitRouteRef.current.hideRoute();
+        } else {
+          console.error('대중교통 경로 실패:', transitResult.error);
+        }
+        setIsLoadingTransit(false);
+      }, 100);
+
+      setError("");
     } catch (err) {
-      console.error(err);
+      console.error('길찾기 실패:', err);
       setError("길찾기 요청 실패");
+      setIsLoadingTransit(false);
     }
   };
 
   // 경로 타입 변경 함수
   const switchRoute = (routeType) => {
-    if (routeType === 'car' && polylineRef.current) {
+    console.log('경로 전환:', routeType, { eta, transitInfo });
+    
+    if (routeType === 'car' && eta) {
       // 대중교통 경로 숨기기
-      if (transitPolylineRef.current) {
-        transitPolylineRef.current.setMap(null);
+      if (transitRouteRef.current) {
+        transitRouteRef.current.hideRoute();
       }
       // 자동차 경로 표시
-      polylineRef.current.setMap(mapRef.current);
+      if (carRouteRef.current) {
+        carRouteRef.current.showRoute(mapRef.current);
+      }
       setActiveRoute('car');
-    } else if (routeType === 'transit' && transitInfo && transitInfo.path) {
+    } else if (routeType === 'transit' && transitInfo) {
       // 자동차 경로 숨기기
-      if (polylineRef.current) {
-        polylineRef.current.setMap(null);
+      if (carRouteRef.current) {
+        carRouteRef.current.hideRoute();
       }
       // 대중교통 경로 표시
-      if (transitPolylineRef.current) {
-        transitPolylineRef.current.setMap(null);
+      if (transitRouteRef.current) {
+        transitRouteRef.current.showRoute(mapRef.current);
       }
-      
-      const kakao = window.kakao;
-      transitPolylineRef.current = new kakao.maps.Polyline({
-        map: mapRef.current,
-        path: transitInfo.path,
-        strokeWeight: 4,
-        strokeColor: '#00C851',
-        strokeOpacity: 0.8,
-        strokeStyle: 'shortdash',
-      });
       setActiveRoute('transit');
     }
   };
 
-  // 평일/주말 묶기
+  // 평일/주말 묶기 (기존 함수)
   const formatOpeningHours = (openingHours) => {
     if (!openingHours) return ["영업시간 정보 없음"];
 
@@ -381,9 +213,9 @@ const MapPage = () => {
     const uniqueWeekday = [...new Set(weekdayTimes)];
     let weekdayStr;
     if (uniqueWeekday.length === 1) {
-      weekdayStr = `평일: ${uniqueWeekday[0]}`;
+      weekdayStr = `ㅤ평일: ${uniqueWeekday[0]}`;
     } else {
-      weekdayStr = `평일: 요일별 영업시간 다름`;
+      weekdayStr = "ㅤ평일:수정중";
     }
 
     const result = [weekdayStr];
@@ -479,7 +311,7 @@ const MapPage = () => {
                       </ul>
                     </div>
                     
-                    {/* 길찾기 버튼 - 기존과 동일 */}
+                    {/* 길찾기 버튼 */}
                     <button
                       className="navigate-btn"
                       onClick={() =>
@@ -493,7 +325,7 @@ const MapPage = () => {
                       🗺️ 길찾기
                     </button>
 
-                    {/* 경로 정보 표시 - 선택된 병원일 때만 */}
+                    {/* 경로 정보 표시 */}
                     {isSelected && (eta || transitInfo || isLoadingTransit) && (
                       <div style={{ marginTop: '12px' }}>
                         {/* 경로 타입 선택 버튼 */}
@@ -532,6 +364,22 @@ const MapPage = () => {
                           </button>
                         </div>
 
+                        {/* 대중교통 안내 메시지 */}
+                        {activeRoute === 'transit' && transitInfo && (
+                          <div style={{ 
+                            background: '#e3f2fd',
+                            padding: '8px',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            color: '#1976d2',
+                            marginBottom: '8px',
+                            textAlign: 'center'
+                          }}>
+                            🚶‍♂️ 회색 점선: 도보구간 | 🚌 색깔 실선: 대중교통<br/>
+                            🟢승차 🔴하차 마커를 클릭해보세요!
+                          </div>
+                        )}
+
                         {/* 경로 상세 정보 */}
                         {activeRoute === 'car' && eta && (
                           <div style={{ 
@@ -568,7 +416,10 @@ const MapPage = () => {
                           }}>
                             <div>🚌 {transitInfo.distance}km / 약 {transitInfo.duration}분</div>
                             <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>
-                              🔄 환승 {transitInfo.transferCount}회
+                              🔄 환승 {transitInfo.transferCount}회 | 🚶‍♂️ 도보 {transitInfo.walkingTime}분
+                            </div>
+                            <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                              📊 도보구간 {transitInfo.walkingSteps}개
                             </div>
                             {transitInfo.summary && (
                               <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>
@@ -600,6 +451,27 @@ const MapPage = () => {
           )}
         </div>
       </div>
+
+      {/* 경로 컴포넌트들 */}
+      <CarRoute ref={carRouteRef} />
+      <TransitRoute ref={transitRouteRef} />
+
+      {/* 에러 표시 */}
+      {error && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: '#f44336',
+          color: 'white',
+          padding: '1rem',
+          borderRadius: '8px',
+          zIndex: 1000
+        }}>
+          {error}
+        </div>
+      )}
     </div>
   );
 };
