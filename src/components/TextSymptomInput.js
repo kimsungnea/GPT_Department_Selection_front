@@ -61,14 +61,22 @@ const TextSymptomInput = ({ onSubmit, onActivate }) => {
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSubmit();
+              }
+            }}
             placeholder="증상을 자세하게 입력할수록 정확도가 증가합니다."
             style={{
               width: "100%",
-              padding: "0.7rem 4rem 0.7rem 1rem", // 오른쪽에 버튼 공간 확보
+              padding: "0.7rem 5rem 0.7rem 1rem", // 버튼 공간을 여유 있게 확보
               borderRadius: "20px",
               border: "1px solid #ccc",
               fontSize: "1rem",
-              boxSizing: "border-box"
+              boxSizing: "border-box",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis"
             }}
           />
           <button
@@ -84,7 +92,8 @@ const TextSymptomInput = ({ onSubmit, onActivate }) => {
               borderRadius: "20px",
               padding: "0.4rem 1rem",
               cursor: "pointer",
-              fontSize: "0.9rem"
+              fontSize: "0.9rem",
+              whiteSpace: "nowrap"
             }}
           >
             제출

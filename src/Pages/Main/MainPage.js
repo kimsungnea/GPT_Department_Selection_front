@@ -81,7 +81,7 @@ const MainPage = () => {
         </div>
         <p className="subtitle">AI 기반 증상 분석 + 위치 기반 병원 추천</p>
         <div className="ad-banner">
-          <img src="/images/corona.png" alt="코로나 광고" />
+          <img src="/images/test1.jpg" alt="프로젝트 광고" />
         </div>
       </header>
 
