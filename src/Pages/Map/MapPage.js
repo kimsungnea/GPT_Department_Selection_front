@@ -213,9 +213,9 @@ const MapPage = () => {
     const uniqueWeekday = [...new Set(weekdayTimes)];
     let weekdayStr;
     if (uniqueWeekday.length === 1) {
-      weekdayStr = `ㅤ평일: ${uniqueWeekday[0]}`;
+      weekdayStr = `평일: ${uniqueWeekday[0]}`;
     } else {
-      weekdayStr = "ㅤ평일:수정중";
+      weekdayStr = `평일: 요일별 영업시간 다름`;
     }
 
     const result = [weekdayStr];
@@ -375,8 +375,8 @@ const MapPage = () => {
                             marginBottom: '8px',
                             textAlign: 'center'
                           }}>
-                            🚶‍♂️ 회색 점선: 도보구간 | 🚌 색깔 실선: 대중교통<br/>
-                            🟢승차 🔴하차 마커를 클릭해보세요!
+                            🚶‍♂️ <span style={{color: '#757575'}}>회색 점선</span>: 도보구간 | 🚌 <span style={{color: '#4CAF50'}}>색깔 실선</span>: 대중교통<br/>
+                            🟢승차 🔴하차 마커를 클릭해보세요!<br/>
                           </div>
                         )}
 
@@ -424,6 +424,19 @@ const MapPage = () => {
                             {transitInfo.summary && (
                               <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>
                                 📍 {transitInfo.summary}
+                              </div>
+                            )}
+                            {transitInfo.isEstimated && (
+                              <div style={{ 
+                                fontSize: '0.75rem', 
+                                marginTop: '6px', 
+                                color: '#f57c00',
+                                background: '#fff3e0',
+                                padding: '4px',
+                                borderRadius: '4px',
+                                border: '1px solid #ffb74d'
+                              }}>
+                                ⚠️ 추정 데이터입니다. 실제 시간과 다를 수 있습니다.
                               </div>
                             )}
                           </div>

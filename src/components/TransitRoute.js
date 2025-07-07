@@ -324,12 +324,25 @@ const TransitRoute = forwardRef((props, ref) => {
             return `${mode} ${step.lineShort || step.lineName}`;
           }).join(' → ');
 
-          // 도보 시간 계산
+          // 도보 시간 계산 수정
           const walkingSteps = allSteps.filter(step => step.travelMode === 'WALK');
+          console.log('🚶‍♂️ 도보 단계들:', walkingSteps);
+          
           const totalWalkingTime = walkingSteps.reduce((total, step) => {
-            const duration = parseInt(step.duration?.replace('s', '') || 0);
+            // duration이 "123s" 형태로 올 수 있으므로 숫자만 추출
+            let duration = 0;
+            if (step.duration) {
+              if (typeof step.duration === 'string') {
+                duration = parseInt(step.duration.replace('s', '')) || 0;
+              } else if (typeof step.duration === 'number') {
+                duration = step.duration;
+              }
+            }
+            console.log('🚶‍♂️ 도보 단계 시간:', step.duration, '→', duration, '초');
             return total + duration;
           }, 0);
+
+          console.log('🚶‍♂️ 총 도보 시간:', totalWalkingTime, '초 =', Math.ceil(totalWalkingTime / 60), '분');
 
           // 경로 그리기
           drawDetailedTransitRoute(map, transitSteps, allSteps);
